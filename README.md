@@ -2,6 +2,62 @@
 
 Predicts housing abandonment risk in Ciudad Juárez using INEGI Census 2020 and IMIP data (urban growth, maquilas, crime, property values). Runs on IBM LinuxONE with real-time, explainable alerts for lenders and city planners.
 
+## Problem statement
+
+**Ciudad Juárez has 55,000 vacant homes, yet credit, development and home-buying decisions are made without knowing which neighborhoods are likely to empty out or how safe they are.**
+
+### Context
+
+- **Scale:** 55,595 vacant homes in the 2020 Census (about 1 in 8), while about 35,000 new homes are planned, mostly on the periphery (Orquiz, 2025).
+- **Impact:** vacant homes concentrate crime (Fuentes Flores, 2016), lower nearby property values and leave public infrastructure unused. Families face insecurity, long commutes and homes that lose value.
+- **Cause:** two decades of cheap peripheral housing built far from jobs and services (Pérez Pulido & Romo Aguilar, 2022; Herrera-Terrazas et al., 2019).
+
+### What our data shows
+
+1. **Two kinds of abandonment.** The aging historic center has a high share of empty homes (20 to 30%) but few in total. Distant 2006 to 2008 developments, 20 to 26 km out, have thousands of empty homes, with blocks reaching 75 to 92% empty.
+2. **Nearby jobs reduce vacancy.** More maquilas within 3 km means fewer empty homes.
+3. **Vacancy and crime go together.** The link is weak but consistent. Crime reports grew from about 5,700 (2020) to about 10,700 (2025).
+4. **Location and access explain abandonment more than price.**
+
+### The gap
+
+- **Lenders and planners** approve mortgages and developments without a forward-looking abandonment risk.
+- **Buyers and people moving to Juárez** have no single place to check whether a neighborhood is emptying out, whether crime is rising, and how far it is from jobs and services.
+- **Research looks backward** (2010 data, case studies), and the data that exists (Census, urban growth, jobs, crime, services) is scattered.
+
+### Our question
+
+> For any neighborhood in Juárez, can we estimate the risk that its homes end up vacant, explain why, show its crime trend and access to jobs and services, and update all of it as new data arrives?
+
+### Users
+
+| User | Decision | What they get |
+|---|---|---|
+| Lenders (INFONAVIT, banks) | Approve a mortgage | Abandonment risk and reasons |
+| City planners (IMIP, municipality) | Approve a development, prioritize rehabilitation | Risk map and alerts as new data arrives |
+| Buyers and newcomers | Where to buy or rent | Neighborhood profile: risk, crime trend, top crime types, distance to jobs, BRT, schools, health |
+
+### Scope
+
+- **In:** Juárez urban area, neighborhood level (AGEB and block), public data only.
+- **Out:** individual household data, price forecasting, other cities (future scaling).
+
+### Responsible use
+
+- Transparent profiles with sources, not "red zone" maps, to avoid stigmatizing neighborhoods.
+- Crime shown as an association, not a cause, and per km² so low-population commercial areas are not inflated.
+- Crime report growth may partly reflect reporting changes; we say "reports grew", not "crime grew".
+
+### Success in 24 hours
+
+1. A model that beats a simple baseline, validated by neighborhood.
+2. Explainable risk per area, e.g. *"High risk: built 2007, 24 km from center, 1 maquila within 3 km, crime up since 2020."*
+3. Real-time demo on LinuxONE: monthly crime records update scores and trigger alerts.
+4. A neighborhood profile a buyer can read.
+5. Pitch line: *"55,000 empty homes. We show where the next ones will be, before the credit, the permit or the purchase."*
+
+**Theme:** Real-Time AI for Critical Decisions.
+
 ## Setup
 
 ```bash
@@ -34,3 +90,31 @@ python scripts/download_data.py
 | Notebook | Content |
 |---|---|
 | `01_exploracion.ipynb` | Joins Census and IMIP layers by AGEB and explores what is associated with vacant housing |
+
+## References
+
+### Literature
+
+Carrillo, M. J., & Pérez, J. (2025). The communal roots of Mexico's maquila industry: Urbanization, land, and inequality in Ciudad Juárez, 1960–2000. *Latin American Research Review, 60*(3), 648–671. https://doi.org/10.1017/lar.2024.35
+
+Fuentes Flores, C. M. (2016). El impacto de las viviendas deshabitadas en el incremento de delitos (robo a casa habitación y homicidios) en Ciudad Juárez, Chihuahua, 2010. *Frontera Norte, 27*(54), 171–196. https://doi.org/10.17428/rfn.v27i54.581
+
+Herrera-Terrazas, L., Peña Barrera, L., & Ordóñez Hernández, G. (2019). Habitabilidad urbana en fraccionamientos periféricos en Ciudad Juárez Chihuahua, México. In *XI Seminario Internacional de Investigación en Urbanismo*. Universitat Politècnica de Catalunya. https://doi.org/10.5821/siiu.6833
+
+Holguín Ávila, R., & Maycotte Pansza, E. (2024). Invasion of social housing and the perception of loneliness: A case study on subdivisions with uninhabited homes in the southeast of Ciudad Juárez. *Nóesis. Revista de Ciencias Sociales, 33*(66), 57–74. https://doi.org/10.20983/noesis.2024.2.4
+
+Pérez Pulido, L. A., & Romo Aguilar, M. de L. (2022). Planes de desarrollo urbano: Instrumentos de legitimación en la expansión urbana de Ciudad Juárez, Chihuahua. *Estudios Demográficos y Urbanos, 37*(1). https://doi.org/10.24201/edu.v37i1.1924
+
+Velázquez Angulo, G., Maycotte Pansza, E., & Olguín, R. (2026). *La evolución de la vivienda deshabitada en el suroriente de Ciudad Juárez: Una mirada retrospectiva al periodo 2002-2019*. Universidad Autónoma de Ciudad Juárez.
+
+### Press
+
+Orquiz, M. (2025, April 4). Harán 35 mil casas nuevas en Ciudad Juárez, pero hay 56 mil abandonadas. *Norte Digital*. https://nortedigital.mx/haran-35-mil-casas-nuevas-en-ciudad-juarez-pero-hay-56-mil-abandonadas
+
+### Data
+
+Instituto Municipal de Investigación y Planeación de Ciudad Juárez. (2026). *Sistema de Información Geográfica Municipal (SIGMUN)* [Data set]. Retrieved October 17, 2026, from https://sigimip.org.mx/
+
+Instituto Nacional de Estadística y Geografía. (2021). *Censo de Población y Vivienda 2020: Principales resultados por AGEB y manzana urbana* [Data set]. https://www.inegi.org.mx/programas/ccpv/2020/
+
+Instituto Nacional de Estadística y Geografía. (2021). *Marco Geoestadístico, diciembre 2020* [Data set]. https://www.inegi.org.mx/temas/mg/
