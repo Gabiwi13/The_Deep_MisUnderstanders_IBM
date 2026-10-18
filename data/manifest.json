@@ -1,0 +1,81 @@
+{
+  "checked_at": "2026-10-18 03:40 UTC",
+  "sources": {
+    "imip_crecimiento_historico": {
+      "info": {
+        "etag": "\"978fdc61e5f6d91:0\"",
+        "last_modified": "Wed, 04 Oct 2023 17:08:23 GMT"
+      },
+      "size": "5019590"
+    },
+    "imip_delitos_2020": {
+      "records": 5716,
+      "sha256": "4ace47e9fa6b82cc"
+    },
+    "imip_delitos_2024": {
+      "records": 7009,
+      "sha256": "af61c6cece8ca829"
+    },
+    "imip_delitos_2025": {
+      "records": 10708,
+      "sha256": "b2474e36d72d3af5"
+    },
+    "imip_delitos_2026": {
+      "records": 6711,
+      "sha256": "0688a5c786d72739"
+    },
+    "imip_estaciones_brt": {
+      "records": 103,
+      "sha256": "dff771785fe63c1c"
+    },
+    "imip_maquilas_2022": {
+      "records": 769,
+      "sha256": "fc8bcc45711473f2"
+    },
+    "imip_niveles_bienestar_2010_2020": {
+      "records": 664,
+      "sha256": "e505bbf0d08b0599"
+    },
+    "imip_parques_industriales": {
+      "records": 36,
+      "sha256": "42d2659435895fd2"
+    },
+    "imip_primarias": {
+      "records": 571,
+      "sha256": "d6add7cf5e8e494b"
+    },
+    "imip_unidades_medicas": {
+      "records": 275,
+      "sha256": "3c8d1b6336196ec0"
+    },
+    "imip_valor_catastral_zonas_2025": {
+      "records": 694,
+      "sha256": "784d1b9ab2be4b61"
+    },
+    "imip_victimas_homicidio": {
+      "records": 3836,
+      "sha256": "a80ffcd0d9d3a2ab"
+    },
+    "inegi_censo_2010": {
+      "info": {
+        "etag": "\"b7ef2749adacd21:0\"",
+        "last_modified": "Mon, 03 Apr 2017 19:05:40 GMT"
+      },
+      "size": "7038368"
+    },
+    "inegi_censo_2020": {
+      "info": {
+        "etag": "\"4f4ea7213182d71:0\"",
+        "last_modified": "Mon, 26 Jul 2021 15:15:56 GMT"
+      },
+      "size": "10220876"
+    },
+    "inegi_marco_geo": {
+      "info": {
+        "etag": "\"7e25e3a52ff3d61:0\"",
+        "last_modified": "Mon, 25 Jan 2021 15:35:02 GMT"
+      },
+      "size": "105791139"
+    }
+  }
+}

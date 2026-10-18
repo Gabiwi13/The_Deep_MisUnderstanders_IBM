@@ -1,0 +1,49 @@
+name: Check data updates
+
+# Daily check of the INEGI and IMIP sources against data/manifest.json.
+# Opens (or updates) one issue when something changed or a source cannot be reached.
+# After re-downloading, run `python scripts/check_updates.py --accept` and commit data/manifest.json.
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # TEMPORARY test cadence (GitHub's minimum is 5 min). After 5 checks, back to: "0 14 * * *" (08:00 in Ciudad Juárez)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare sources with the manifest
+        id: check
+        run: |
+          set +e
+          python3 scripts/check_updates.py --report report.md
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open or update the alert issue
+        if: steps.check.outputs.code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODE: ${{ steps.check.outputs.code }}
+        run: |
+          if [ "$CODE" = "1" ]; then
+            title="Data changed upstream"
+          else
+            title="Data sources unreachable"
+          fi
+          existing=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md
+          fi
+
+      - name: Fail the run on a script crash
+        if: steps.check.outputs.code != '0' && steps.check.outputs.code != '1' && steps.check.outputs.code != '2'
+        run: exit 1
