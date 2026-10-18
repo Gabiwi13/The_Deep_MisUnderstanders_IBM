@@ -1,0 +1,5 @@
+model,hit_rate_top10,hit_rate_std,spearman,explains_each_area,platform
+Random Forest,0.465,0.385,0.666,partial,"arm64, Python 3.14.7"
+XGBoost (shallow),0.436,0.341,0.656,yes,"arm64, Python 3.14.7"
+Ridge,0.43,0.302,0.645,yes,"arm64, Python 3.14.7"
+Persistence (2020 rank = 2010 rank),0.321,0.188,0.475,yes,"arm64, Python 3.14.7"

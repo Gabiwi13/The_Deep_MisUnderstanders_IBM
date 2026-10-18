@@ -15,6 +15,7 @@ RAW = Path(__file__).resolve().parent.parent / "data" / "raw"
 MUN = "037"  # Juárez, Chihuahua (state 08)
 
 INEGI_CENSO = "https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/ageb_manzana/ageb_mza_urbana_08_cpv2020_csv.zip"
+INEGI_CENSO_2010 = "https://www.inegi.org.mx/contenidos/programas/ccpv/2010/datosabiertos/ageb_y_manzana/resageburb_08_2010_csv.zip"
 INEGI_MG = "https://www.inegi.org.mx/contenidos/productos/prod_serv/contenidos/espanol/bvinegi/productos/geografia/marcogeo/889463807469/08_chihuahua.zip"
 IMIP = "https://sigimip.org.mx/server/rest/services/"
 IMIP_CRECIMIENTO = "https://sigimip.org.mx/download/crecimiento/chehistoGEO_F7.geojson"
@@ -56,6 +57,16 @@ def censo(tmp):
     df[df.MUN == MUN].to_csv(RAW / "juarez_censo2020_ageb_manzana.csv", index=False)
 
 
+def censo_2010(tmp):
+    """Census 2010 AGEB totals for Juárez (same variables as 2020, lowercase names), for the 2030 forecast."""
+    z = tmp / "censo2010.zip"
+    curl(INEGI_CENSO_2010, z)
+    with zipfile.ZipFile(z) as zf:
+        csv = next(n for n in zf.namelist() if n.endswith(".csv") and "conjunto_de_datos" in n)
+        df = pd.read_csv(zf.open(csv), dtype=str)
+    df[(df.mun == MUN) & (df.nom_loc == "Total AGEB urbana")].to_csv(RAW / "juarez_censo2010_ageb.csv", index=False)
+
+
 def marco_geo(tmp):
     z = tmp / "mg.zip"
     curl(INEGI_MG, z)
@@ -87,6 +98,8 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as t:
         censo(Path(t))
         print("censo ok")
+        censo_2010(Path(t))
+        print("censo 2010 ok")
         marco_geo(Path(t))
         print("marco geoestadistico ok")
     curl(IMIP_CRECIMIENTO, RAW / "imip" / "crecimiento_historico.geojson")

@@ -40,7 +40,7 @@ Identifies which city blocks in Ciudad Juárez share the profile of abandoned ho
 ### Scope
 
 - **In:** Juárez urban area, neighborhood level (AGEB and block), public data only.
-- **Planned:** 2030 vacancy forecast by neighborhood, only if a model trained on Census 2010 beats "same as before" when predicting 2020.
+- **2030 outlook** by neighborhood, as a position within the city (not a %), because a model trained on Census 2010 beat "same as before" when predicting 2020.
 - **Out:** real-time streaming, individual household data, price forecasting, other cities (future scaling).
 
 ### Responsible use
@@ -83,6 +83,7 @@ python scripts/download_data.py
 
 | File | Source |
 |---|---|
+| `juarez_censo2010_ageb.csv` | INEGI, Censo de Población y Vivienda 2010 (AGEB totals, Juárez only) |
 | `juarez_censo2020_ageb_manzana.csv`, `diccionario_variables.csv` | INEGI, Censo de Población y Vivienda 2020 (AGEB and block, Juárez only) |
 | `inegi_marco_geo_2020_juarez.gpkg` | INEGI, Marco Geoestadístico 2020 (layers `ageb`, `manzana`) |
 | `imip/crecimiento_historico.geojson` | IMIP Juárez, historic urban growth 1856 to 2023 |
@@ -95,6 +96,7 @@ python scripts/download_data.py
 | `01_exploracion.ipynb` | Explores what is associated with vacant housing by AGEB, from `data/ageb_features.csv` (no geopandas needed) |
 | `02_model_selection.ipynb` | Compares candidate models with the protocol below and saves `results/` (run on LinuxONE) |
 | `03_risk_model.ipynb` | Final XGBoost model: out-of-fold risk score per block, risk level (high = top 10%, medium = next 20%), three reasons per block; saves `results/block_risk.csv` and `results/xgb_risk_model.json` |
+| `03b_outlook_2030.ipynb` | 2030 vacancy outlook by neighborhood: Census 2010 features to 2020 vacancy rank, validated with spatial folds against persistence, then applied to 2020; saves `results/outlook_2030_ageb.csv` |
 | `04_crime_trends_profile.ipynb` | Crime grouped by who it affects (residential, domestic violence, vehicle, commercial; police activity excluded), residential trend per neighborhood Jan to Sep 2026 vs 2025 per km², commercial / transit zone tag, priority list (high abandonment profile and residential crime not falling) and `profile()` for any block or neighborhood; saves `results/crime_trends_ageb.csv` |
 
 ## Running on LinuxONE
@@ -167,6 +169,19 @@ Run on IBM LinuxONE (s390x, Python 3.12.15, XGBoost 3.4.1).
 | Residential crime reports, Jan to Sep 2026 vs 2025 | -30% (292 neighborhoods falling, 266 stable, 9 rising) |
 | Commercial / transit zones tagged | 9 |
 | Priority neighborhoods (high abandonment profile and residential crime not falling) | 36 |
+
+### 2030 outlook (notebook 03b)
+
+Juárez went from 111,103 vacant homes in 2010 to 55,595 in 2020 (median neighborhood 20.9% to 10.3% vacant), so the target is each neighborhood's **vacancy rank within the city**, not the %. Trained on 2010 features to predict the 2020 rank, 546 neighborhoods in both censuses, spatial folds (30 geographic clusters, 5 repetitions). Laptop run; replace with the LinuxONE run.
+
+| Model | Hit rate, top 10% most vacant | Hit rate std | Spearman |
+|---|---|---|---|
+| Random Forest | 0.465 | 0.385 | 0.666 |
+| XGBoost (shallow) | 0.436 | 0.341 | 0.656 |
+| **Ridge** | 0.430 | 0.302 | 0.645 |
+| Persistence (2020 rank = 2010 rank) | 0.321 | 0.188 | 0.475 |
+
+All three models beat persistence and tie with each other; **Ridge** wins the tie (explains each neighborhood, simplest). Main drivers: vacancy now (strongest), few occupants per home, few people with health insurance, far from BRT, few maquilas nearby. The outlook flags 57 neighborhoods in the top 10% and 56 moving up, mostly older neighborhoods west of the center, while the far periphery, which recovered most from 2010 to 2020, moves down. It is a scenario if the 2010 to 2020 pattern continues, not a certainty; fold results vary a lot (std about 0.3).
 
 ## References
 
