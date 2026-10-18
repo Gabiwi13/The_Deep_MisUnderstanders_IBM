@@ -172,12 +172,12 @@ Run on IBM LinuxONE (s390x, Python 3.12.15, XGBoost 3.4.1).
 
 ### 2030 outlook (notebook 03b)
 
-Juárez went from 111,103 vacant homes in 2010 to 55,595 in 2020 (median neighborhood 20.9% to 10.3% vacant), so the target is each neighborhood's **vacancy rank within the city**, not the %. Trained on 2010 features to predict the 2020 rank, 546 neighborhoods in both censuses, spatial folds (30 geographic clusters, 5 repetitions). Laptop run; replace with the LinuxONE run.
+Juárez went from 111,103 vacant homes in 2010 to 55,595 in 2020 (median neighborhood 20.9% to 10.3% vacant), so the target is each neighborhood's **vacancy rank within the city**, not the %. Trained on 2010 features to predict the 2020 rank, 546 neighborhoods in both censuses, spatial folds (30 geographic clusters, 5 repetitions). Run on IBM LinuxONE (s390x, Python 3.12.15).
 
 | Model | Hit rate, top 10% most vacant | Hit rate std | Spearman |
 |---|---|---|---|
 | Random Forest | 0.465 | 0.385 | 0.666 |
-| XGBoost (shallow) | 0.436 | 0.341 | 0.656 |
+| XGBoost (shallow) | 0.437 | 0.340 | 0.656 |
 | **Ridge** | 0.430 | 0.302 | 0.645 |
 | Persistence (2020 rank = 2010 rank) | 0.321 | 0.188 | 0.475 |
 
