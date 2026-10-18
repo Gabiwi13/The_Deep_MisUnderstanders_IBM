@@ -91,6 +91,7 @@ python scripts/download_data.py
 |---|---|
 | `01_exploracion.ipynb` | Explores what is associated with vacant housing by AGEB, from `data/ageb_features.csv` (no geopandas needed) |
 | `02_model_selection.ipynb` | Compares candidate models with the protocol below and saves `results/` (run on LinuxONE) |
+| `03_risk_model.ipynb` | Final XGBoost model: out-of-fold risk score per block, risk level (high = top 10%, medium = next 20%), three reasons per block; saves `results/block_risk.csv` and `results/xgb_risk_model.json` |
 
 ## Running on LinuxONE
 
