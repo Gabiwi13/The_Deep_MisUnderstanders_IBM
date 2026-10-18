@@ -184,6 +184,25 @@ Juárez went from 111,103 vacant homes in 2010 to 55,595 in 2020 (median neighbo
 
 All three models beat persistence and tie with each other; **Ridge** wins the tie (explains each neighborhood, simplest). Main drivers: vacancy now (strongest), few occupants per home, few people with health insurance, far from BRT, few export factories nearby. The outlook flags 57 neighborhoods in the top 10% and 56 moving up, mostly older neighborhoods west of the center, while the far periphery, which recovered most from 2010 to 2020, moves down. It is a scenario if the 2010 to 2020 pattern continues, not a certainty; fold results vary a lot (std about 0.3).
 
+## Keeping the data current
+
+**Today:**
+
+- A daily GitHub Action (`.github/workflows/check-data-updates.yml`) runs `scripts/check_updates.py`, which compares the INEGI files and the IMIP layers with `data/manifest.json` and opens or updates an issue when something changed or a source cannot be reached. After a new download, run `python scripts/check_updates.py --accept` and commit the manifest.
+- `scripts/refresh_pipeline.sh` re-runs the whole pipeline (download, features, notebooks 03, 03b and 04) and `scripts/compare_results.py` reports how the risk levels moved. It is run by hand on the LinuxONE instance, with `--force` to skip the change check.
+
+### Future work
+
+- **Cron on the LinuxONE instance.** The refresh script is not scheduled yet. Before scheduling it:
+  - Make it fire once per change. The new baseline is accepted on the `refresh/` branch, not on the branch the script returns to, so the same change would be reprocessed on every run. Keep the last accepted baseline in a file outside git, or merge the refresh branch before the next run.
+  - Save the results off the instance (push the `refresh/` branch with `PUSH=1` and a GitHub token, or copy them out), because they only live on the server.
+  - Put the environment in the crontab line (cron does not inherit it): `NOTEBOOK_RUN`, and `flock` so two runs cannot overlap.
+- **Agent that explains each change.** A job in the same workflow, run only when the check finds a change, that reads the report and the `refresh/` results and comments on the issue: which layers changed, how many new records, whether the change touches a model feature, and how many blocks moved risk level. Details for a first version:
+  - Runs as a job inside the check workflow, not as a separate workflow on the issue event: issues opened with the workflow's own token do not trigger other workflows.
+  - Needs an Anthropic API key stored as a repository secret.
+  - Read-only: it can comment on the issue but not change files or push, since it reads upstream text that should not be trusted as instructions.
+  - Comments only when the change is new, so a repeated check does not repeat the same message.
+
 ## References
 
 ### Literature
