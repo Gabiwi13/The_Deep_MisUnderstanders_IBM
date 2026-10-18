@@ -1,5 +1,6 @@
-"""Build data/features.csv (one row per city block, model target and features) and
-data/ageb_features.csv (one row per neighborhood, for notebook 01).
+"""Build data/features.csv (one row per city block, model target and features),
+data/ageb_features.csv (one row per neighborhood, notebooks 01 and 04) and
+data/crimes_by_ageb.csv (IMIP crime records tagged with their neighborhood, notebook 04).
 Run from the repo root:
     python scripts/prepare_features.py
 
@@ -103,6 +104,7 @@ def ageb_features():
     a = a.merge(c[["CVEGEO", "POBTOT", "TVIVPAR", "VIVPAR_DES", "GRAPROES"]], on="CVEGEO")
     a = a[a.TVIVPAR >= 50].reset_index(drop=True)
     a["pct_vacant"] = a.VIVPAR_DES / a.TVIVPAR * 100
+    a["area_km2"] = a.area / 1e6
     cen = gpd.GeoDataFrame(a[["CVEGEO"]], geometry=a.centroid, crs=UTM)
     lonlat = cen.to_crs(4326)
     a["lon"], a["lat"] = lonlat.geometry.x, lonlat.geometry.y
@@ -127,6 +129,22 @@ def ageb_features():
     return pd.DataFrame(a.drop(columns="geometry"))
 
 
+def crimes_by_ageb(years=(2020, 2024, 2025, 2026)):
+    """Every IMIP crime record tagged with the AGEB it falls in, for notebook 04 (no geopandas there)."""
+    agebs = gpd.read_file(RAW / "inegi_marco_geo_2020_juarez.gpkg", layer="ageb").to_crs(UTM)[["CVEGEO", "geometry"]]
+    out = []
+    for y in years:
+        d = imip(f"delitos_{y}")
+        j = gpd.sjoin(d, agebs, how="left", predicate="within")
+        ll = j.to_crs(4326)
+        out.append(pd.DataFrame({
+            "year": y, "month": pd.to_numeric(j.MES_NUMERO, errors="coerce"), "day": pd.to_numeric(j.DIA_NUMERO, errors="coerce"),
+            "hour": j.HORA, "category": j.ID_GRUPO, "colonia": j.COLONIA, "ageb": j.CVEGEO,
+            "lon": ll.geometry.x.round(6), "lat": ll.geometry.y.round(6),
+        }))
+    return pd.concat(out, ignore_index=True)
+
+
 if __name__ == "__main__":
     m = load_blocks()
     m, f = spatial_features(m, census_features(m))
@@ -139,3 +157,8 @@ if __name__ == "__main__":
     path = ROOT / "data" / "ageb_features.csv"
     a.to_csv(path, index=False)
     print(f"{path}: {len(a)} AGEBs")
+
+    cr = crimes_by_ageb()
+    path = ROOT / "data" / "crimes_by_ageb.csv"
+    cr.to_csv(path, index=False)
+    print(f"{path}: {len(cr)} crime records, {cr.ageb.isna().mean():.1%} outside urban AGEBs")

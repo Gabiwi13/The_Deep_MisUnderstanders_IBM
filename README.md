@@ -1,10 +1,10 @@
 # The Deep MisUnderstanders · IBM Z Datathon 2026
 
-Predicts housing abandonment risk in Ciudad Juárez using INEGI Census 2020 and IMIP data (urban growth, maquilas, crime, property values). Runs on IBM LinuxONE with real-time, explainable alerts for lenders and city planners.
+Identifies which city blocks in Ciudad Juárez share the profile of abandoned housing, explains why, and tracks residential crime trends by neighborhood. Built on INEGI Census 2020 and IMIP data, running on IBM LinuxONE for city government and urban analysts.
 
 ## Problem statement
 
-**Ciudad Juárez has 55,000 vacant homes, yet credit, development and home-buying decisions are made without knowing which neighborhoods are likely to empty out or how safe they are.**
+**Ciudad Juárez has 55,000 vacant homes, yet the people who plan the city have no single view of which neighborhoods share the profile of abandoned housing, why, and how residential crime is trending there.**
 
 ### Context
 
@@ -21,42 +21,45 @@ Predicts housing abandonment risk in Ciudad Juárez using INEGI Census 2020 and 
 
 ### The gap
 
-- **Lenders and planners** approve mortgages and developments without a forward-looking abandonment risk.
-- **Buyers and people moving to Juárez** have no single place to check whether a neighborhood is emptying out, whether crime is rising, and how far it is from jobs and services.
-- **Research looks backward** (2010 data, case studies), and the data that exists (Census, urban growth, jobs, crime, services) is scattered.
+- **City government** (IMIP, municipality, state housing agencies) approves developments and plans rehabilitation without one view that combines vacancy, its causes and crime trends.
+- **Urban analysts and researchers** work from 2010 data and case studies; the current data (Census 2020, urban growth, jobs, crime, services) is scattered across sources.
+- **Lenders and buyers** face the same gap when choosing where to finance or live.
 
 ### Our question
 
-> For any neighborhood in Juárez, can we estimate the risk that its homes end up vacant, explain why, show its crime trend and access to jobs and services, and update all of it as new data arrives?
+> For any block or neighborhood in Juárez, can we tell how closely it matches the profile of abandoned housing, explain why, and show its residential crime trend and access to jobs and services?
 
 ### Users
 
 | User | Decision | What they get |
 |---|---|---|
-| Lenders (INFONAVIT, banks) | Approve a mortgage | Abandonment risk and reasons |
-| City planners (IMIP, municipality) | Approve a development, prioritize rehabilitation | Risk map and alerts as new data arrives |
-| Buyers and newcomers | Where to buy or rent | Neighborhood profile: risk, crime trend, top crime types, distance to jobs, BRT, schools, health |
+| **City government** (IMIP, municipality, state housing agencies) | Approve developments, prioritize rehabilitation and services | Risk map by block, reasons, neighborhoods where high vacancy profile and rising residential crime coincide |
+| **Urban analysts and researchers** | Understand how the city is changing | City-wide crime trends by type, vacancy drivers, reproducible notebooks on public data |
+| Lenders and buyers (secondary) | Where to finance, buy or rent | Neighborhood profile: risk, reasons, crime trend, access to jobs, BRT, schools, health |
 
 ### Scope
 
 - **In:** Juárez urban area, neighborhood level (AGEB and block), public data only.
-- **Out:** individual household data, price forecasting, other cities (future scaling).
+- **Planned:** 2030 vacancy forecast by neighborhood, only if a model trained on Census 2010 beats "same as before" when predicting 2020.
+- **Out:** real-time streaming, individual household data, price forecasting, other cities (future scaling).
 
 ### Responsible use
 
 - Transparent profiles with sources, not "red zone" maps, to avoid stigmatizing neighborhoods.
 - Crime shown as an association, not a cause, and per km² so low-population commercial areas are not inflated.
+- Crime split by who it affects (residential, vehicle, commercial); police activity such as arrests on warrants is excluded, so malls and busy avenues do not make residential areas look dangerous.
 - Crime report growth may partly reflect reporting changes; we say "reports grew", not "crime grew".
 
 ### Success in 24 hours
 
 1. A model that beats a simple baseline, validated by neighborhood.
-2. Explainable risk per area, e.g. *"High risk: built 2007, 24 km from center, 1 maquila within 3 km, crime up since 2020."*
-3. Real-time demo on LinuxONE: monthly crime records update scores and trigger alerts.
-4. A neighborhood profile a buyer can read.
-5. Pitch line: *"55,000 empty homes. We show where the next ones will be, before the credit, the permit or the purchase."*
+2. Explainable risk per block, e.g. *"High risk: urbanized 2019, 24 km from center, few homes with internet."*
+3. Monthly residential crime trend per neighborhood, separated from vehicle, commercial and police activity.
+4. A neighborhood profile that combines risk, reasons, crime trend and access.
+5. Everything runs on IBM LinuxONE (s390x), with measured timings.
+6. Pitch line: *"55,000 empty homes. We show which blocks share their profile, why, and where residential crime is rising, so the city can act first."*
 
-**Theme:** Real-Time AI for Critical Decisions.
+**Theme:** Wildcard: Beyond the Obvious.
 
 ## Setup
 
@@ -92,6 +95,7 @@ python scripts/download_data.py
 | `01_exploracion.ipynb` | Explores what is associated with vacant housing by AGEB, from `data/ageb_features.csv` (no geopandas needed) |
 | `02_model_selection.ipynb` | Compares candidate models with the protocol below and saves `results/` (run on LinuxONE) |
 | `03_risk_model.ipynb` | Final XGBoost model: out-of-fold risk score per block, risk level (high = top 10%, medium = next 20%), three reasons per block; saves `results/block_risk.csv` and `results/xgb_risk_model.json` |
+| `04_crime_trends_profile.ipynb` | Crime grouped by who it affects (residential, domestic violence, vehicle, commercial; police activity excluded), residential trend per neighborhood Jan to Sep 2026 vs 2025 per km², commercial / transit zone tag, priority list (high abandonment profile and residential crime not falling) and `profile()` for any block or neighborhood; saves `results/crime_trends_ageb.csv` |
 
 ## Running on LinuxONE
 
@@ -99,8 +103,8 @@ pip has no s390x builds of the map libraries, so the work is split on the same i
 
 | Step | Where | Needs |
 |---|---|---|
-| `python3 scripts/prepare_features.py` writes `data/features.csv` and `data/ageb_features.csv` | Instance host (Ubuntu 24.04) | `sudo apt install -y python3-geopandas` |
-| All notebooks (exploration, modeling, alerts) | Official Jupyter container ([jupyter-lab-ml](https://github.com/linuxone-community-cloud/jupyter-lab-ml)) | pandas, scikit-learn, XGBoost (in the image) plus `requirements-linuxone.txt` (Snap ML, Python 3.12 or lower) |
+| `python3 scripts/prepare_features.py` writes `data/features.csv`, `data/ageb_features.csv` and `data/crimes_by_ageb.csv` | Instance host (Ubuntu 24.04) | `sudo apt install -y python3-geopandas` |
+| All notebooks (exploration, modeling, crime trends) | Official Jupyter container ([jupyter-lab-ml](https://github.com/linuxone-community-cloud/jupyter-lab-ml)) | pandas, scikit-learn, XGBoost (in the image) plus `requirements-linuxone.txt` (Snap ML, Python 3.12 or lower) |
 
 `requirements.txt` is for laptops (it includes the map libraries). On LinuxONE use `requirements-linuxone.txt`; notebook 02 installs it automatically when it detects s390x, or run `pip install -r requirements-linuxone.txt` yourself.
 
@@ -148,7 +152,7 @@ Base rate of high-vacancy blocks: 0.113.
 | Regression, crime raw count | 0.481 | 0.169 | 0.843 |
 | Classifier >= 25%, crime percentile | 0.478 | 0.154 | 0.841 |
 
-All variants are within the fold spread. Crime does not add accuracy, so its role is the real-time alerts and the buyer profile, not the risk score. Regression stays: it ranks as well as the classifier and captures more vacant homes.
+All variants are within the fold spread. Crime does not add accuracy, so its role is the crime trends and the neighborhood profile, not the risk score. Regression stays: it ranks as well as the classifier and captures more vacant homes.
 
 ## References
 
