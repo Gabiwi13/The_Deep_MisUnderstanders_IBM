@@ -1,4 +1,5 @@
-"""Build data/features.csv: one row per city block (manzana) with the model target and features.
+"""Build data/features.csv (one row per city block, model target and features) and
+data/ageb_features.csv (one row per neighborhood, for notebook 01).
 Run from the repo root:
     python scripts/prepare_features.py
 
@@ -90,6 +91,42 @@ def spatial_features(m, f):
     return m, f
 
 
+def ageb_features():
+    """One row per AGEB (neighborhood) for notebook 01, with centroid lon/lat so it can map without geopandas."""
+    c = pd.read_csv(RAW / "juarez_censo2020_ageb_manzana.csv", dtype=str)
+    c = c[c.NOM_LOC == "Total AGEB urbana"].copy()
+    for k in ["POBTOT", "TVIVPAR", "VIVPAR_DES", "GRAPROES"]:
+        c[k] = pd.to_numeric(c[k], errors="coerce")
+    c["CVEGEO"] = c.ENTIDAD + c.MUN + c.LOC + c.AGEB
+
+    a = gpd.read_file(RAW / "inegi_marco_geo_2020_juarez.gpkg", layer="ageb").to_crs(UTM)
+    a = a.merge(c[["CVEGEO", "POBTOT", "TVIVPAR", "VIVPAR_DES", "GRAPROES"]], on="CVEGEO")
+    a = a[a.TVIVPAR >= 50].reset_index(drop=True)
+    a["pct_vacant"] = a.VIVPAR_DES / a.TVIVPAR * 100
+    cen = gpd.GeoDataFrame(a[["CVEGEO"]], geometry=a.centroid, crs=UTM)
+    lonlat = cen.to_crs(4326)
+    a["lon"], a["lat"] = lonlat.geometry.x, lonlat.geometry.y
+
+    def at_centroid(layer, col):
+        j = gpd.sjoin(cen, layer[[col, "geometry"]], how="left", predicate="within")
+        return j.groupby(level=0)[col].first()
+
+    a["year_urbanized"] = at_centroid(imip("crecimiento_historico"), "CRECIMI")
+    a["property_value"] = pd.to_numeric(at_centroid(imip("valor_catastral_zonas_2025"), "VALORCATA"), errors="coerce")
+    maq = imip("maquilas_2022")
+    a["km_maquila"] = cen.geometry.apply(lambda p: maq.distance(p).min() / 1000)
+    a["maquilas_3km"] = cen.geometry.apply(lambda p: (maq.distance(p) < 3000).sum())
+    for layer, col in [("estaciones_brt", "km_brt"), ("unidades_medicas", "km_health")]:
+        pts = imip(layer)
+        a[col] = cen.geometry.apply(lambda p: pts.distance(p).min() / 1000)
+    centro = gpd.GeoSeries.from_xy([CENTRO[0]], [CENTRO[1]], crs=4326).to_crs(UTM).iloc[0]
+    a["km_center"] = cen.distance(centro) / 1000
+    for y in [2020, 2025]:
+        n = gpd.sjoin(imip(f"delitos_{y}")[["geometry"]], a[["CVEGEO", "geometry"]], predicate="within").groupby("CVEGEO").size()
+        a[f"crimes{y}_per1000"] = a.CVEGEO.map(n).fillna(0) / a.POBTOT * 1000
+    return pd.DataFrame(a.drop(columns="geometry"))
+
+
 if __name__ == "__main__":
     m = load_blocks()
     m, f = spatial_features(m, census_features(m))
@@ -97,3 +134,8 @@ if __name__ == "__main__":
     path = ROOT / "data" / "features.csv"
     out.to_csv(path, index=False)
     print(f"{path}: {len(out)} blocks, {f.shape[1]} features")
+
+    a = ageb_features()
+    path = ROOT / "data" / "ageb_features.csv"
+    a.to_csv(path, index=False)
+    print(f"{path}: {len(a)} AGEBs")
