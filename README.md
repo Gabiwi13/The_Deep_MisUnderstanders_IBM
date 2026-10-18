@@ -186,6 +186,36 @@ All three models beat persistence and tie with each other; **Ridge** wins the ti
 
 ## Keeping the data current
 
+![Pipeline: detect upstream changes on GitHub, re-score on IBM LinuxONE](docs/pipeline.png)
+
+<details>
+<summary>Editable version of the diagram (Mermaid)</summary>
+
+```mermaid
+flowchart TB
+  subgraph detect["1 · Detect · GitHub Actions, once a day"]
+    direction LR
+    S["Public sources<br/>INEGI + IMIP"] --> C["check_updates.py"] --> I["GitHub issue"]
+  end
+  subgraph refresh["2 · Refresh · IBM LinuxONE"]
+    direction LR
+    R["refresh_pipeline.sh<br/>by hand today"] --> D["download_data.py"] --> P["prepare_features.py"] --> N["Notebooks 03, 03b, 04"] --> X["compare_results.py"]
+  end
+  subgraph out["3 · Outputs · refresh/ branch"]
+    direction LR
+    O1["data/"]
+    O2["results/"]
+    O3["refresh_report.md"]
+  end
+  I -->|"a person reads the issue"| R
+  I -.->|future| A["Agent explains the change"]
+  P --> O1
+  N --> O2
+  X --> O3
+```
+
+</details>
+
 **Today:**
 
 - A daily GitHub Action (`.github/workflows/check-data-updates.yml`) runs `scripts/check_updates.py`, which compares the INEGI files and the IMIP layers with `data/manifest.json` and opens or updates an issue when something changed or a source cannot be reached. After a new download, run `python scripts/check_updates.py --accept` and commit the manifest.
