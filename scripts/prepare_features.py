@@ -1,0 +1,99 @@
+"""Build data/features.csv: one row per city block (manzana) with the model target and features.
+Run from the repo root:
+    python scripts/prepare_features.py
+
+Needs geopandas. On LinuxONE (s390x) pip has no builds, use Ubuntu packages on the host:
+    sudo apt install -y python3-geopandas
+Written for geopandas >= 0.14 (the Ubuntu 24.04 version).
+"""
+from pathlib import Path
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parent.parent
+RAW = ROOT / "data" / "raw"
+IMIP = RAW / "imip"
+UTM = 32613  # UTM zone 13N, distances in meters
+MIN_DWELLINGS = 10
+CENTRO = (-106.4845, 31.7395)  # approx. historic center (lon, lat)
+
+
+def imip(name):
+    return gpd.read_file(IMIP / f"{name}.geojson").to_crs(UTM)
+
+
+def load_blocks():
+    c = pd.read_csv(RAW / "juarez_censo2020_ageb_manzana.csv", dtype=str)
+    m = c[(c.MZA != "000") & (c.NOM_LOC != "Total AGEB urbana")].copy()
+    keys = ["ENTIDAD", "NOM_ENT", "MUN", "NOM_MUN", "LOC", "NOM_LOC", "AGEB", "MZA"]
+    masked = m["VIVPAR_DES"] == "*"
+    num = [k for k in m.columns if k not in keys]
+    m[num] = m[num].apply(pd.to_numeric, errors="coerce")
+    m = m.copy()  # defragment after converting ~220 columns
+    m["CVEGEO"] = m.ENTIDAD + m.MUN + m.LOC + m.AGEB + m.MZA
+    m["AGEB_KEY"] = m.CVEGEO.str[:13]
+    m["vacant_masked"] = masked
+    m = m[m.TVIVPAR >= MIN_DWELLINGS].copy()
+    # INEGI masks values of 1 or 2 as '*': use the midpoint instead of dropping (dropping overstates vacancy)
+    vacant = np.where(m.vacant_masked, 1.5, m.VIVPAR_DES)
+    m["target_pct_vacant"] = vacant / m.TVIVPAR * 100
+    return m
+
+
+def census_features(m):
+    # Shares of residents or of inhabited homes only: anything over total housing stock would leak the target
+    f = pd.DataFrame(index=m.index)
+    f["avg_occupants"] = m.PROM_OCUP
+    f["schooling_years"] = m.GRAPROES
+    for col, den in [("POB0_14", "POBTOT"), ("POB65_MAS", "POBTOT"), ("PDER_SS", "POBTOT"), ("PEA", "P_12YMAS")]:
+        f[f"pct_{col}"] = m[col] / m[den] * 100
+    for col in ["VPH_INTER", "VPH_AUTOM", "VPH_PISOTI", "VPH_C_ELEC", "VPH_AGUADV",
+                "VPH_DRENAJ", "VPH_PC", "VPH_CEL", "VPH_1CUART"]:
+        f[f"pct_{col}"] = m[col] / m.TVIVPARHAB * 100
+    return f
+
+
+def spatial_features(m, f):
+    blocks = gpd.read_file(RAW / "inegi_marco_geo_2020_juarez.gpkg", layer="manzana").to_crs(UTM)
+    blocks = blocks[["CVEGEO", "geometry"]].merge(m[["CVEGEO"]].reset_index(), on="CVEGEO").set_index("index")
+    m, f = m.loc[blocks.index], f.loc[blocks.index]
+    cen = gpd.GeoDataFrame(geometry=blocks.centroid, crs=UTM)
+    lonlat = cen.to_crs(4326)
+    f["lon"], f["lat"] = lonlat.geometry.x, lonlat.geometry.y
+
+    f["area_ha"] = blocks.area / 1e4
+    f["dwellings_per_ha"] = m.VIVTOT / f.area_ha
+
+    growth = imip("crecimiento_historico")[["CRECIMI", "geometry"]]
+    j = gpd.sjoin_nearest(cen, growth, how="left", max_distance=500)
+    f["year_urbanized"] = j.groupby(level=0).CRECIMI.first()
+
+    centro = gpd.GeoSeries.from_xy([CENTRO[0]], [CENTRO[1]], crs=4326).to_crs(UTM).iloc[0]
+    f["km_center"] = cen.distance(centro) / 1000
+    for layer, col in [("maquilas_2022", "km_maquila"), ("estaciones_brt", "km_brt"),
+                       ("unidades_medicas", "km_health"), ("primarias", "km_school")]:
+        j = gpd.sjoin_nearest(cen, imip(layer)[["geometry"]], how="left", distance_col="d")
+        f[col] = j.groupby(level=0).d.first() / 1000
+
+    for layer, radius, col in [("maquilas_2022", 3000, "maquilas_3km"), ("delitos_2020", 500, "crimes_500m")]:
+        buf = gpd.GeoDataFrame(geometry=cen.buffer(radius).rename_axis(None), crs=UTM)
+        hits = gpd.sjoin(imip(layer)[["geometry"]], buf, predicate="within")
+        f[col] = hits.groupby("index_right").size().reindex(f.index).fillna(0)
+    # rank within the year, so 2025/2026 reports can be fed later without the reporting volume shift
+    f["crimes_500m_pct"] = f.crimes_500m.rank(pct=True)
+
+    value = imip("valor_catastral_zonas_2025")[["VALORCATA", "geometry"]]
+    j = gpd.sjoin(cen, value, how="left", predicate="within")
+    f["property_value"] = pd.to_numeric(j.groupby(level=0).VALORCATA.first(), errors="coerce")
+    return m, f
+
+
+if __name__ == "__main__":
+    m = load_blocks()
+    m, f = spatial_features(m, census_features(m))
+    out = pd.concat([m[["CVEGEO", "AGEB_KEY", "TVIVPAR", "vacant_masked", "target_pct_vacant"]], f], axis=1)
+    path = ROOT / "data" / "features.csv"
+    out.to_csv(path, index=False)
+    print(f"{path}: {len(out)} blocks, {f.shape[1]} features")

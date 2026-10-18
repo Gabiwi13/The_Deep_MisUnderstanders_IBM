@@ -90,6 +90,48 @@ python scripts/download_data.py
 | Notebook | Content |
 |---|---|
 | `01_exploracion.ipynb` | Joins Census and IMIP layers by AGEB and explores what is associated with vacant housing |
+| `02_model_selection.ipynb` | Compares candidate models with the protocol below and saves `results/` (run on LinuxONE) |
+
+## Running on LinuxONE
+
+pip has no s390x builds of the map libraries, so the work is split on the same instance:
+
+| Step | Where | Needs |
+|---|---|---|
+| `python3 scripts/prepare_features.py` writes `data/features.csv` | Instance host (Ubuntu 24.04) | `sudo apt install -y python3-geopandas` |
+| Notebooks `02_*` and later (modeling, alerts) | Official Jupyter container ([jupyter-lab-ml](https://github.com/linuxone-community-cloud/jupyter-lab-ml)) | pandas, scikit-learn, XGBoost (in the image), optional `pip install snapml` (Python 3.12 or lower) |
+
+`data/features.csv` is committed, so the container can run without the host step. If apt fails, run `prepare_features.py` on a laptop and copy the file with `scp`.
+
+## Model selection
+
+We choose the model by experiment, not by preference. Every candidate uses the same data, validation and decision rule.
+
+- **Data:** `data/features.csv`, 16,452 city blocks with 10 or more homes. Target: % vacant homes. Features use only shares of residents or of inhabited homes, so nothing leaks the target. INEGI masks 1 or 2 vacant homes as `*`; we use 1.5.
+- **Validation:** 5-fold cross-validation grouped by neighborhood (AGEB). Models are always scored on neighborhoods they never saw, like a new development.
+- **Candidates:** median baseline, Ridge, Random Forest, scikit-learn Gradient Boosting, XGBoost, Snap ML.
+- **Metrics, by priority:**
+  1. Hit rate in the top 10%: of the blocks flagged as highest risk, the share that really are >= 25% vacant.
+  2. Share of vacant homes captured in that top 10%.
+  3. AUC.
+  4. Stability across folds.
+  5. Training and scoring time on LinuxONE.
+  6. Explanation per block (yes, partial, no).
+- **Decision rule:** best mean hit rate wins. Models within one fold standard deviation of the best are tied; ties are broken by explainability, then scoring speed.
+- **Variants with the winner:** target (% vacant or >= 25% yes/no) and crime feature (city percentile, raw count, none).
+
+### Results
+
+Reference run on a laptop (arm64, XGBoost and Snap ML not available there). **Replace with the LinuxONE run.**
+
+| Model | Hit rate top 10% | Vacant homes captured | AUC | Hit rate std |
+|---|---|---|---|---|
+| Gradient Boosting (sklearn) | 0.488 | 0.167 | 0.842 | 0.063 |
+| Random Forest | 0.462 | 0.168 | 0.829 | 0.083 |
+| Ridge | 0.341 | 0.123 | 0.732 | 0.059 |
+| Baseline (median) | 0.120 | 0.102 | 0.500 | 0.031 |
+
+Base rate of high-vacancy blocks: 0.113. Variants: crime percentile, raw count and no crime all score about the same (0.49 to 0.50), within the fold spread.
 
 ## References
 
