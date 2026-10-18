@@ -1,10 +1,10 @@
 # The Deep MisUnderstanders · IBM Z Datathon 2026
 
-Identifies which city blocks in Ciudad Juárez share the profile of abandoned housing, explains why, and tracks residential crime trends by neighborhood. Built on INEGI Census 2020 and IMIP data, running on IBM LinuxONE for city government and urban analysts.
+Open machine learning on public data: identifies which city blocks in Ciudad Juárez share the profile of abandoned housing, explains why, gives a 2030 outlook and tracks residential crime by neighborhood. Built on INEGI Census and IMIP data, running on IBM LinuxONE for city government and urban analysts.
 
 ## Problem statement
 
-**Ciudad Juárez has 55,000 vacant homes, yet the people who plan the city have no single view of which neighborhoods share the profile of abandoned housing, why, and how residential crime is trending there.**
+**Ciudad Juárez has 55,000 vacant homes. The data to understand them is public; the machine learning analysis that turns it into decisions is not.**
 
 ### Context
 
@@ -15,15 +15,16 @@ Identifies which city blocks in Ciudad Juárez share the profile of abandoned ho
 ### What our data shows
 
 1. **Two kinds of abandonment.** The aging historic center has a high share of empty homes (20 to 30%) but few in total. Distant 2006 to 2008 developments, 20 to 26 km out, have thousands of empty homes, with blocks reaching 75 to 92% empty.
-2. **Nearby jobs reduce vacancy.** More maquilas within 3 km means fewer empty homes.
-3. **Vacancy and crime go together.** The link is weak but consistent. Crime reports grew from about 5,700 (2020) to about 10,700 (2025).
+2. **Nearby jobs reduce vacancy.** More export factories (maquiladoras) within 3 km means fewer empty homes.
+3. **Vacancy and crime go together.** The link is weak but consistent. Report counts are not comparable across years, because IMIP renamed its crime categories; only 2025 and 2026 match.
 4. **Location and access explain abandonment more than price.**
 
 ### The gap
 
-- **City government** (IMIP, municipality, state housing agencies) approves developments and plans rehabilitation without one view that combines vacancy, its causes and crime trends.
+- **City government** (IMIP, municipality, state housing agencies) already holds the Census and city maps, but not a model of which blocks are emptying out and why.
+- **Banks and developers** very likely run this kind of housing risk modeling for their own decisions, and keep it private.
 - **Urban analysts and researchers** work from 2010 data and case studies; the current data (Census 2020, urban growth, jobs, crime, services) is scattered across sources.
-- **Lenders and buyers** face the same gap when choosing where to finance or live.
+- **Our contribution:** open, explainable machine learning on public data, with reproducible notebooks and a reason behind every score, built for the city and its residents.
 
 ### Our question
 
@@ -57,7 +58,7 @@ Identifies which city blocks in Ciudad Juárez share the profile of abandoned ho
 3. Monthly residential crime trend per neighborhood, separated from vehicle, commercial and police activity.
 4. A neighborhood profile that combines risk, reasons, crime trend and access.
 5. Everything runs on IBM LinuxONE (s390x), with measured timings.
-6. Pitch line: *"55,000 empty homes. We show which blocks share their profile, why, and where residential crime is rising, so the city can act first."*
+6. Pitch line: *"55,000 empty homes. We bring the machine learning the private sector keeps to itself into the open, so the city can act first."*
 
 **Theme:** Wildcard: Beyond the Obvious.
 
@@ -87,7 +88,7 @@ python scripts/download_data.py
 | `juarez_censo2020_ageb_manzana.csv`, `diccionario_variables.csv` | INEGI, Censo de Población y Vivienda 2020 (AGEB and block, Juárez only) |
 | `inegi_marco_geo_2020_juarez.gpkg` | INEGI, Marco Geoestadístico 2020 (layers `ageb`, `manzana`) |
 | `imip/crecimiento_historico.geojson` | IMIP Juárez, historic urban growth 1856 to 2023 |
-| `imip/*.geojson` | IMIP Juárez SIGMUN public services: crime 2020/2024/2025/2026, homicides, maquilas, industrial parks, property values 2025, wellbeing levels, BRT, schools, health units |
+| `imip/*.geojson` | IMIP Juárez SIGMUN public services: crime 2020/2024/2025/2026, homicides, export factories (maquiladoras), industrial parks, property values 2025, wellbeing levels, BRT, schools, health units |
 
 ## Notebooks
 
@@ -181,7 +182,7 @@ Juárez went from 111,103 vacant homes in 2010 to 55,595 in 2020 (median neighbo
 | **Ridge** | 0.430 | 0.302 | 0.645 |
 | Persistence (2020 rank = 2010 rank) | 0.321 | 0.188 | 0.475 |
 
-All three models beat persistence and tie with each other; **Ridge** wins the tie (explains each neighborhood, simplest). Main drivers: vacancy now (strongest), few occupants per home, few people with health insurance, far from BRT, few maquilas nearby. The outlook flags 57 neighborhoods in the top 10% and 56 moving up, mostly older neighborhoods west of the center, while the far periphery, which recovered most from 2010 to 2020, moves down. It is a scenario if the 2010 to 2020 pattern continues, not a certainty; fold results vary a lot (std about 0.3).
+All three models beat persistence and tie with each other; **Ridge** wins the tie (explains each neighborhood, simplest). Main drivers: vacancy now (strongest), few occupants per home, few people with health insurance, far from BRT, few export factories nearby. The outlook flags 57 neighborhoods in the top 10% and 56 moving up, mostly older neighborhoods west of the center, while the far periphery, which recovered most from 2010 to 2020, moves down. It is a scenario if the 2010 to 2020 pattern continues, not a certainty; fold results vary a lot (std about 0.3).
 
 ## References
 
