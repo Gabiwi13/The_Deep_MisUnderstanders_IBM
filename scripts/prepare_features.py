@@ -26,6 +26,21 @@ def imip(name):
     return gpd.read_file(IMIP / f"{name}.geojson").to_crs(UTM)
 
 
+def nearest(points, layer, max_distance=None):
+    """Position in `layer` of the feature nearest to each point, and the distance in meters.
+    Replaces gpd.sjoin_nearest, which geopandas 0.10 (Ubuntu 22.04) only supports with PyGEOS."""
+    from shapely.strtree import STRtree
+    geoms = list(layer.geometry)
+    tree = STRtree(geoms)
+    find = tree.nearest_item if hasattr(tree, "nearest_item") else tree.nearest  # shapely 1.8 / >= 2.0
+    pos = np.array([find(p) for p in points.geometry])
+    d = np.array([p.distance(geoms[i]) for p, i in zip(points.geometry, pos)])
+    out = pd.DataFrame({"pos": pos.astype(float), "d": d}, index=points.index)
+    if max_distance is not None:
+        out.loc[out.d > max_distance, "pos"] = np.nan
+    return out
+
+
 def load_blocks():
     c = pd.read_csv(RAW / "juarez_censo2020_ageb_manzana.csv", dtype=str)
     m = c[(c.MZA != "000") & (c.NOM_LOC != "Total AGEB urbana")].copy()
@@ -69,15 +84,14 @@ def spatial_features(m, f):
     f["dwellings_per_ha"] = m.VIVTOT / f.area_ha
 
     growth = imip("crecimiento_historico")[["CRECIMI", "geometry"]]
-    j = gpd.sjoin_nearest(cen, growth, how="left", max_distance=500)
-    f["year_urbanized"] = j.groupby(level=0).CRECIMI.first()
+    j = nearest(cen, growth, max_distance=500)
+    f["year_urbanized"] = growth.CRECIMI.reset_index(drop=True).reindex(j.pos).to_numpy()
 
     centro = gpd.GeoSeries.from_xy([CENTRO[0]], [CENTRO[1]], crs=4326).to_crs(UTM).iloc[0]
     f["km_center"] = cen.distance(centro) / 1000
     for layer, col in [("maquilas_2022", "km_maquila"), ("estaciones_brt", "km_brt"),
                        ("unidades_medicas", "km_health"), ("primarias", "km_school")]:
-        j = gpd.sjoin_nearest(cen, imip(layer)[["geometry"]], how="left", distance_col="d")
-        f[col] = j.groupby(level=0).d.first() / 1000
+        f[col] = nearest(cen, imip(layer)[["geometry"]]).d / 1000
 
     for layer, radius, col in [("maquilas_2022", 3000, "maquilas_3km"), ("delitos_2020", 500, "crimes_500m")]:
         buf = gpd.GeoDataFrame(geometry=cen.buffer(radius).rename_axis(None), crs=UTM)
