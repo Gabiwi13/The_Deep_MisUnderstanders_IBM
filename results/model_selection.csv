@@ -1,6 +1,6 @@
 ,hit_rate_top10,vacant_captured_top10,auc,fit_s,score_ms_per_1k,hit_rate_std,explains_each_block,platform
-Gradient Boosting (sklearn),0.488,0.167,0.842,0.528,7.138,0.063,partial,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-XGBoost,0.481,0.169,0.843,1.371,6.723,0.072,yes,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-Random Forest,0.462,0.168,0.829,25.679,33.432,0.083,partial,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-Ridge,0.341,0.123,0.732,0.075,1.205,0.059,yes,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-Baseline (median),0.12,0.102,0.5,0.014,0.308,0.031,n/a,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Gradient Boosting (sklearn),0.488,0.167,0.842,0.584,7.258,0.063,partial,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+XGBoost,0.481,0.169,0.843,1.394,6.309,0.072,yes,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Random Forest,0.462,0.168,0.829,24.586,26.046,0.083,partial,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Ridge,0.341,0.123,0.732,0.052,1.031,0.059,yes,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Baseline (median),0.12,0.102,0.5,0.002,0.278,0.031,n/a,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"

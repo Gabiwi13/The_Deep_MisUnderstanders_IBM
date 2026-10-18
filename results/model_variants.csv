@@ -1,5 +1,5 @@
 ,hit_rate_top10,vacant_captured_top10,auc,fit_s,score_ms_per_1k,model,platform
-"regression, no crime",0.491,0.171,0.846,1.513,6.532,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-"regression, crime percentile",0.481,0.169,0.843,1.375,6.278,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-"regression, crime raw count",0.481,0.169,0.843,1.413,6.3,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
-"classifier >=25%, crime percentile",0.478,0.154,0.841,1.223,6.306,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+"regression, no crime",0.491,0.171,0.846,1.424,6.346,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+"regression, crime percentile",0.481,0.169,0.843,1.404,6.307,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+"regression, crime raw count",0.481,0.169,0.843,1.395,6.287,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+"classifier >=25%, crime percentile",0.478,0.154,0.841,1.265,6.346,XGBoost,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
