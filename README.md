@@ -154,6 +154,20 @@ Base rate of high-vacancy blocks: 0.113.
 
 All variants are within the fold spread. Crime does not add accuracy, so its role is the crime trends and the neighborhood profile, not the risk score. Regression stays: it ranks as well as the classifier and captures more vacant homes.
 
+### Risk model and crime trends (LinuxONE run)
+
+Run on IBM LinuxONE (s390x, Python 3.12.15, XGBoost 3.4.1).
+
+| Result | Value |
+|---|---|
+| Risk model AUC (blocks >= 25% vacant, out-of-fold) | 0.847 |
+| High-risk blocks (top 10%) that really are >= 25% vacant | 49.5% (base rate 11.3%) |
+| Scoring the whole city (16,452 blocks) | 84.5 ms |
+| Scoring one block | 1.43 ms |
+| Residential crime reports, Jan to Sep 2026 vs 2025 | -30% (292 neighborhoods falling, 266 stable, 9 rising) |
+| Commercial / transit zones tagged | 9 |
+| Priority neighborhoods (high abandonment profile and residential crime not falling) | 36 |
+
 ## References
 
 ### Literature
