@@ -124,16 +124,30 @@ We choose the model by experiment, not by preference. Every candidate uses the s
 
 ### Results
 
-Reference run on a laptop (arm64, XGBoost and Snap ML not available there). **Replace with the LinuxONE run.**
+Run on IBM LinuxONE (s390x, Python 3.12.15, XGBoost 3.4.1). Snap ML installed but failed to import (`AttributeError`), so it was skipped.
 
-| Model | Hit rate top 10% | Vacant homes captured | AUC | Hit rate std |
-|---|---|---|---|---|
-| Gradient Boosting (sklearn) | 0.488 | 0.167 | 0.842 | 0.063 |
-| Random Forest | 0.462 | 0.168 | 0.829 | 0.083 |
-| Ridge | 0.341 | 0.123 | 0.732 | 0.059 |
-| Baseline (median) | 0.120 | 0.102 | 0.500 | 0.031 |
+| Model | Hit rate top 10% | Vacant homes captured | AUC | Hit rate std | Fit (s/fold) | Scoring (ms per 1k blocks) | Explains each block |
+|---|---|---|---|---|---|---|---|
+| Gradient Boosting (sklearn) | 0.488 | 0.167 | 0.842 | 0.063 | 0.53 | 7.1 | partial |
+| **XGBoost** | 0.481 | 0.169 | 0.843 | 0.072 | 1.37 | 6.7 | **yes** |
+| Random Forest | 0.462 | 0.168 | 0.829 | 0.083 | 25.7 | 33.4 | partial |
+| Ridge | 0.341 | 0.123 | 0.732 | 0.059 | 0.08 | 1.2 | yes |
+| Baseline (median) | 0.120 | 0.102 | 0.500 | 0.031 | 0.01 | 0.3 | n/a |
 
-Base rate of high-vacancy blocks: 0.113. Variants: crime percentile, raw count and no crime all score about the same (0.49 to 0.50), within the fold spread.
+Base rate of high-vacancy blocks: 0.113.
+
+**Decision: XGBoost.** Gradient Boosting, XGBoost and Random Forest are within one fold standard deviation of the best, so they tie. XGBoost wins the tie because it explains each block natively (`pred_contribs`). Its hit rate is about 4.3 times the base rate: of the 10% of blocks it flags, 48% really are >= 25% vacant.
+
+**Variants with XGBoost:**
+
+| Variant | Hit rate top 10% | Vacant homes captured | AUC |
+|---|---|---|---|
+| Regression, no crime | 0.491 | 0.171 | 0.846 |
+| Regression, crime percentile | 0.481 | 0.169 | 0.843 |
+| Regression, crime raw count | 0.481 | 0.169 | 0.843 |
+| Classifier >= 25%, crime percentile | 0.478 | 0.154 | 0.841 |
+
+All variants are within the fold spread. Crime does not add accuracy, so its role is the real-time alerts and the buyer profile, not the risk score. Regression stays: it ranks as well as the classifier and captures more vacant homes.
 
 ## References
 
