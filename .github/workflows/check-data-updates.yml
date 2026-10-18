@@ -5,7 +5,7 @@ name: Check data updates
 # After re-downloading, run `python scripts/check_updates.py --accept` and commit data/manifest.json.
 on:
   schedule:
-    - cron: "*/5 * * * *"  # TEMPORARY test cadence (GitHub's minimum is 5 min). After 5 checks, back to: "0 14 * * *" (08:00 in Ciudad Juárez)
+    - cron: "0 14 * * *"  # 08:00 in Ciudad Juárez
   workflow_dispatch:
 
 permissions:
