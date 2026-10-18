@@ -1,5 +1,6 @@
 ,hit_rate_top10,vacant_captured_top10,auc,fit_s,score_ms_per_1k,hit_rate_std,explains_each_block,platform
-Gradient Boosting (sklearn),0.488,0.167,0.842,1.854,7.491,0.063,partial,"arm64, Python 3.14.7, {}"
-Random Forest,0.462,0.168,0.829,9.416,23.271,0.083,partial,"arm64, Python 3.14.7, {}"
-Ridge,0.341,0.123,0.732,0.042,0.77,0.059,yes,"arm64, Python 3.14.7, {}"
-Baseline (median),0.12,0.102,0.5,0.005,0.241,0.031,n/a,"arm64, Python 3.14.7, {}"
+Gradient Boosting (sklearn),0.488,0.167,0.842,0.528,7.138,0.063,partial,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+XGBoost,0.481,0.169,0.843,1.371,6.723,0.072,yes,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Random Forest,0.462,0.168,0.829,25.679,33.432,0.083,partial,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Ridge,0.341,0.123,0.732,0.075,1.205,0.059,yes,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
+Baseline (median),0.12,0.102,0.5,0.014,0.308,0.031,n/a,"s390x, Python 3.12.15, {'xgboost': '3.4.1'}"
