@@ -1,0 +1,4 @@
+# Extra packages for the LinuxONE Jupyter container (s390x).
+# pandas, numpy, scikit-learn, xgboost and matplotlib are already in the image.
+# snapml has s390x wheels for Python 3.9 to 3.12 only.
+snapml>=1.17

@@ -99,7 +99,9 @@ pip has no s390x builds of the map libraries, so the work is split on the same i
 | Step | Where | Needs |
 |---|---|---|
 | `python3 scripts/prepare_features.py` writes `data/features.csv` | Instance host (Ubuntu 24.04) | `sudo apt install -y python3-geopandas` |
-| Notebooks `02_*` and later (modeling, alerts) | Official Jupyter container ([jupyter-lab-ml](https://github.com/linuxone-community-cloud/jupyter-lab-ml)) | pandas, scikit-learn, XGBoost (in the image), optional `pip install snapml` (Python 3.12 or lower) |
+| Notebooks `02_*` and later (modeling, alerts) | Official Jupyter container ([jupyter-lab-ml](https://github.com/linuxone-community-cloud/jupyter-lab-ml)) | pandas, scikit-learn, XGBoost (in the image) plus `requirements-linuxone.txt` (Snap ML, Python 3.12 or lower) |
+
+`requirements.txt` is for laptops (it includes the map libraries). On LinuxONE use `requirements-linuxone.txt`; notebook 02 installs it automatically when it detects s390x, or run `pip install -r requirements-linuxone.txt` yourself.
 
 `data/features.csv` is committed, so the container can run without the host step. If apt fails, run `prepare_features.py` on a laptop and copy the file with `scp`.
 

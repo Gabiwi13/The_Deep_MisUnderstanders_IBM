@@ -1,5 +1,5 @@
 ,hit_rate_top10,vacant_captured_top10,auc,fit_s,score_ms_per_1k,model,platform
-"regression, no crime",0.497,0.169,0.843,1.584,5.952,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
-"regression, crime percentile",0.488,0.167,0.842,1.67,6.03,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
-"regression, crime raw count",0.488,0.167,0.842,1.742,7.602,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
-"classifier >=25%, crime percentile",0.476,0.15,0.837,1.001,4.107,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
+"regression, no crime",0.497,0.169,0.843,2.197,10.511,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
+"regression, crime percentile",0.488,0.167,0.842,3.144,13.361,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
+"regression, crime raw count",0.488,0.167,0.842,1.95,8.074,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
+"classifier >=25%, crime percentile",0.476,0.15,0.837,1.544,7.174,Gradient Boosting (sklearn),"arm64, Python 3.14.7, {}"
